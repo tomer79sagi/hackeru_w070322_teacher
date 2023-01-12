@@ -24,6 +24,11 @@
         "title": "One Hundred Years of Solitude",
         "isbn": "9780060531041",
         "description": "One Hundred Years of Solitude is a novel by Gabriel García Márquez that tells the story of the Buendía family and the town of Macondo, which is based on the author's hometown. The novel is known for its magical realism and its exploration of themes such as isolation and repression."
+      },
+      {
+        "isbn": "111",
+        "title": "John Wick",
+        "description": "Keanu Reaves is Neo."
       }
     ]
   }
