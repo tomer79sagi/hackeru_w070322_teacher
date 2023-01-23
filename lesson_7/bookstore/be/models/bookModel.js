@@ -6,7 +6,7 @@ const BookSchema = mongoose.Schema({
     description: String,
     price: Number,
     quantity: Number
-})
+}, {versionKey: "_v"})
 
 const BookModel = mongoose.model("BookModel", BookSchema, "books");
 

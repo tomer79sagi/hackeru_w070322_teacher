@@ -47,6 +47,44 @@ router.post("/", async (request, response) => {
     }
 });
 
+// PUT http://localhost:3000/api/books/9788532520056
+// Statuses:
+//  - 200: Successfully updated the book
+//  - 400: Validation error (ProductModel is invalid)
+//  - 404: Book with provided ISBN cannot be found in DB
+//  - 500: General server-side srror
+router.put("/:_isbn", async (request, response) => {
+
+    // 1. Create a try/catch block.
+    try {
+
+        // 2. Extract 'isbn' value from the URL/path 'request.params'
+        const isbn = request.params._isbn;
+
+        // 3. Extract the 'book' properties from the 'request.body'
+        const book = request.body;
+
+        // 4. [Validate Book Object] --> ...
+        //  - [Failed validation] return status 400, including specific error message
+
+        // 5. Execute mongoose 'update' function with 'isbn' and the book 'object'
+        const updatedBook = await BookModel.updateOne({isbn: isbn}, book);
+
+        //  - [No ISBN provided OR ISBN doesn't exist in DB] return status 404
+        if (updatedBook.matchedCount === 0)
+            response.sendStatus(404);
+        
+        //  - [Success] return status 200
+        else
+            response.json({modified: updatedBook.modifiedCount});
+
+    // -. [Any unknown exception] return status 500 (..catch..)
+    } catch(err) {
+        response.status(500).send(err.message);
+    }
+    
+});
+
 // PUT http://localhost:3000/api/books/init
 router.put("/init", async (request, response) => {
 
