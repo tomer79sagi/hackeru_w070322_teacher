@@ -15,6 +15,18 @@ router.get("/", async (request, response) => {
 
 });
 
+// GET http://localhost:3000/api/books/3453453453
+router.get("/:_isbn", async (request, response) => {
+
+    try {
+        const book = await BookModel.findOne({isbn: request.params._isbn});
+        response.json(book);
+    } catch(err) {
+        response.status(500).send(err.message);
+    }
+
+});
+
 // DELETE http://localhost:3000/api/books/9788532520056
 router.delete("/:_isbn", async (request, response) => {
     try {
@@ -45,6 +57,35 @@ router.post("/", async (request, response) => {
     } catch(err) {
         response.status(500).send(err.message);
     }
+});
+
+
+// PUT http://localhost:3000/api/books/init
+router.put("/init", async (request, response) => {
+
+    // 1. Clear the 'books' collection from all entries
+    BookModel.collection.drop();
+
+    // 2. Read the baseline .json data from 'books.json'
+    // Read the baseline 'books' array from a JSON file
+    fs.readFile('./dal/books.json', 'utf8', (err, data) => {
+        if (err) {
+            console.error(err);
+            response.json("Fail");
+            return;
+        }
+
+        // Success file read
+        // 3. Insert all of the .json data into the 'books' collection
+        const jsData = JSON.parse(data);
+
+        jsData.books.forEach(element => {
+            new BookModel(element).save();
+        });
+
+        response.json("Success");
+    });
+
 });
 
 // PUT http://localhost:3000/api/books/9788532520056
@@ -83,34 +124,6 @@ router.put("/:_isbn", async (request, response) => {
         response.status(500).send(err.message);
     }
     
-});
-
-// PUT http://localhost:3000/api/books/init
-router.put("/init", async (request, response) => {
-
-    // 1. Clear the 'books' collection from all entries
-    BookModel.collection.drop();
-
-    // 2. Read the baseline .json data from 'books.json'
-    // Read the baseline 'books' array from a JSON file
-    fs.readFile('./dal/books.json', 'utf8', (err, data) => {
-        if (err) {
-            console.error(err);
-            response.json("Fail");
-            return;
-        }
-
-        // Success file read
-        // 3. Insert all of the .json data into the 'books' collection
-        const jsData = JSON.parse(data);
-
-        jsData.books.forEach(element => {
-            new BookModel(element).save();
-        });
-
-        response.json("Success");
-    });
-
 });
 
 module.exports = router;

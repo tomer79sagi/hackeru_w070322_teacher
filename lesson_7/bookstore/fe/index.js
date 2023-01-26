@@ -10,11 +10,13 @@ async function loadTable() {
           for (let object of res.data) {
               trHTML += `
                   <tr> 
-                      <td style="width:10%">${object.isbn}</td>;
-                      <td style="width:25%">${object.title}</td>
-                      <td style="width:50%;font-size:0.8em;">${object.description}</td>
-                      <td style="width:15%"><button type="button" class="btn btn-outline-secondary" onclick="showUserEditBox(${object.isbn})">Edit</button>
-                      <button type="button" class="btn btn-outline-danger" onclick="userDelete(${object.isbn})">Del</button></td>
+                      <td style="width:10%">${object.isbn}</td>
+                      <td style="width:20%">${object.title}</td>
+                      <td style="width:45%;font-size:0.8em;">${object.description}</td>
+                      <td style="width:5%;font-size:0.8em;">${object.price ? object.price : ""}</td>
+                      <td style="width:5%;font-size:0.8em;">${object.quantity ? object.quantity : ""}</td>
+                      <td style="width:15%"><button type="button" class="btn btn-outline-secondary" onclick="showBookEditBox(${object.isbn})">Edit</button>
+                      <button type="button" class="btn btn-outline-danger" onclick="bookDelete(${object.isbn})">Del</button></td>
                   </tr>`;
           }
 
@@ -25,106 +27,102 @@ async function loadTable() {
   });
 }
 
-function showUserCreateBox() {
+function showBookCreateBox() {
   Swal.fire({
-    title: 'Create user',
+    title: 'Create book',
     html:
-      '<input id="id" type="hidden">' +
-      '<input id="fname" class="swal2-input" placeholder="First">' +
-      '<input id="lname" class="swal2-input" placeholder="Last">' +
-      '<input id="username" class="swal2-input" placeholder="Username">' +
-      '<input id="email" class="swal2-input" placeholder="Email">',
+      '<input id="isbn" class="swal2-input" placeholder="ISBN">' +
+      '<input id="title" class="swal2-input" placeholder="Title">' +
+      '<input id="description" class="swal2-input" placeholder="Description">' +
+      '<input id="price" class="swal2-input" placeholder="Price">' +
+      '<input id="quantity" class="swal2-input" placeholder="Quantity">',
     focusConfirm: false,
     preConfirm: () => {
-      userCreate();
+      bookCreate();
     }
   })
 }
 
-function userCreate() {
-  const fname = document.getElementById("fname").value;
-  const lname = document.getElementById("lname").value;
-  const username = document.getElementById("username").value;
-  const email = document.getElementById("email").value;
-    
-  const xhttp = new XMLHttpRequest();
-  xhttp.open("POST", "https://www.mecallapi.com/api/users/create");
-  xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-  xhttp.send(JSON.stringify({ 
-    "fname": fname, "lname": lname, "username": username, "email": email, 
-    "avatar": "https://www.mecallapi.com/users/cat.png"
-  }));
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      const objects = JSON.parse(this.responseText);
-      Swal.fire(objects['message']);
-      loadTable();
-    }
+async function bookCreate() {
+  const book = {
+    isbn: document.getElementById("isbn").value,
+    title: document.getElementById("title").value,
+    description: document.getElementById("description").value,
+    price: document.getElementById("price").value,
+    quantity: document.getElementById("quantity").value
   };
+
+  // POST http://localhost:3000/api/books
+  await axios.post(`http://localhost:3000/api/books`, book
+  ).then(res => {
+      if (res.status === 201) {
+        Swal.fire(`Successfully created new book '${res.data.title}'.`);
+        loadTable();
+      } 
+  }).catch(err => {
+      alert(err.response.status + "\n\r" + err.response.data + "\n\r" + err.message);
+  });
 }
 
-function showUserEditBox(id) {
-  console.log(id);
-  const xhttp = new XMLHttpRequest();
-  xhttp.open("GET", "https://www.mecallapi.com/api/users/"+id);
-  xhttp.send();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      const objects = JSON.parse(this.responseText);
-      const user = objects['user'];
-      console.log(user);
-      Swal.fire({
-        title: 'Edit User',
-        html:
-          '<input id="id" type="hidden" value='+user['id']+'>' +
-          '<input id="fname" class="swal2-input" placeholder="First" value="'+user['fname']+'">' +
-          '<input id="lname" class="swal2-input" placeholder="Last" value="'+user['lname']+'">' +
-          '<input id="username" class="swal2-input" placeholder="Username" value="'+user['username']+'">' +
-          '<input id="email" class="swal2-input" placeholder="Email" value="'+user['email']+'">',
-        focusConfirm: false,
-        preConfirm: () => {
-          userEdit();
-        }
-      })
-    }
-  };
+async function showBookEditBox(isbn) {
+
+  // 1. Read the book information from the server first
+  await axios.get(`http://localhost:3000/api/books/${isbn}`, {}
+  ).then(res => {
+      if (res.status === 200) {
+        // 2. Display the book information from the server
+        const book = res.data;
+
+        Swal.fire({
+          title: 'Edit Book',
+          html:
+            `<input id="isbn" class="swal2-input" placeholder="ISBN" value="${book.isbn}" disabled>
+            <input id="title" class="swal2-input" placeholder="Title" value="${book.title}">
+            <input id="description" class="swal2-input" placeholder="Description" value="${book.description}">
+            <input id="price" class="swal2-input" placeholder="Price" value="${book.price ? book.price : ""}">
+            <input id="quantity" class="swal2-input" placeholder="Quantity" value="${book.quantity ? book.quantity : ""}">`,
+          focusConfirm: false,
+          preConfirm: () => { // 3. Perform the update, and call the server (call the PUT API)
+            bookEdit();
+          }
+        })
+      } 
+  }).catch(err => {
+    alert(err.response.status + "\n\r" + err.response.data + "\n\r" + err.message);
+  });
 }
 
-function userEdit() {
-  const id = document.getElementById("id").value;
-  const fname = document.getElementById("fname").value;
-  const lname = document.getElementById("lname").value;
-  const username = document.getElementById("username").value;
-  const email = document.getElementById("email").value;
-    
-  const xhttp = new XMLHttpRequest();
-  xhttp.open("PUT", "https://www.mecallapi.com/api/users/update");
-  xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-  xhttp.send(JSON.stringify({ 
-    "id": id, "fname": fname, "lname": lname, "username": username, "email": email, 
-    "avatar": "https://www.mecallapi.com/users/cat.png"
-  }));
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      const objects = JSON.parse(this.responseText);
-      Swal.fire(objects['message']);
-      loadTable();
-    }
+async function bookEdit() {
+  const book = {
+    isbn: document.getElementById("isbn").value,
+    title: document.getElementById("title").value,
+    description: document.getElementById("description").value,
+    price: document.getElementById("price").value,
+    quantity: document.getElementById("quantity").value
   };
+
+  // PUT http://localhost:3000/api/books/9788532520056
+  await axios.put(`http://localhost:3000/api/books/${book.isbn}`, book
+  ).then(res => {
+      if (res.status === 200) {
+        Swal.fire(`Successfully updated book.`);
+        loadTable();
+      } 
+  }).catch(err => {
+      alert(err.response.status + "\n\r" + err.response.data + "\n\r" + err.message);
+  });
 }
 
-function userDelete(id) {
-  const xhttp = new XMLHttpRequest();
-  xhttp.open("DELETE", "https://www.mecallapi.com/api/users/delete");
-  xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-  xhttp.send(JSON.stringify({ 
-    "id": id
-  }));
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4) {
-      const objects = JSON.parse(this.responseText);
-      Swal.fire(objects['message']);
-      loadTable();
-    } 
-  };
+async function bookDelete(isbn) {
+
+  // DELETE http://localhost:3000/api/books/9788532520056
+  await axios.delete(`http://localhost:3000/api/books/${isbn}`, {}
+  ).then(res => {
+      if (res.status === 204) {
+        Swal.fire(`Successfully deleted book.`);
+        loadTable();
+      } 
+  }).catch(err => {
+      alert(err.response.status + "\n\r" + err.response.data + "\n\r" + err.message);
+  });
 }
