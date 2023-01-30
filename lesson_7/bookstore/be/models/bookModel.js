@@ -1,12 +1,29 @@
 const mongoose = require("mongoose");
 
+// 'currency': EUR, USD, ILS, etc...
 const BookSchema = mongoose.Schema({
     isbn: String,
-    title: String,
+    title: {
+        type: String,
+        required: true,
+        minlength: 2,
+        maxlength: 400
+    },
     description: String,
-    price: Number,
+    price: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 200
+    },
+    currency: {
+        type: String,
+        required: [true, "'currency' is missing."],
+        minlength: 3,
+        maxlength: 3
+    },
     quantity: Number
-}, {versionKey: "_v"})
+})
 
 const BookModel = mongoose.model("BookModel", BookSchema, "books");
 

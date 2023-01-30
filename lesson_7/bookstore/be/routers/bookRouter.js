@@ -48,6 +48,9 @@ router.post("/", async (request, response) => {
         const book = new BookModel(request.body);
 
         // 2. Validate the data (will be done later using JOI)
+        const errors = book.validateSync(); // synchronized method for running validations
+        if (errors)
+            return response.status(400).send(errors);
 
         // 3. Execute 'BookModel.save();' -> Will be granted a new '_id' from the DB
         await book.save();

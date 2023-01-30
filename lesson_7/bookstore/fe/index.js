@@ -53,14 +53,28 @@ async function bookCreate() {
   };
 
   // POST http://localhost:3000/api/books
-  await axios.post(`http://localhost:3000/api/books`, book
-  ).then(res => {
+  await axios.post(`http://localhost:3000/api/books`, book)
+  .then(res => {
       if (res.status === 201) {
         Swal.fire(`Successfully created new book '${res.data.title}'.`);
         loadTable();
-      } 
-  }).catch(err => {
-      alert(err.response.status + "\n\r" + err.response.data + "\n\r" + err.message);
+      }
+  })
+  .catch(err => {
+      if (err.response.status === 400) {
+        
+        if (err.response.data.errors) {
+          const erArray = err.response.data.errors;
+
+          for (field in erArray) {
+            // 1. Use 'selector' - querySelector / getElementById etc. to find the matching UI field
+            // 2. Highlight the field with a red border and display the message below it
+            alert(field + " " + erArray[field].message);
+          }
+        }
+      } else {
+        alert(err.response.status + "\n\r" + err.response.data + "\n\r" + err.message);
+      }
   });
 }
 
