@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const BookModel = require("../models/bookModel");
-const BookModelJOI = require("../models/bookModelJoi");
 
 // GET http://localhost:3000/api/books
 router.get("/", async (request, response) => {
@@ -44,22 +43,19 @@ router.delete("/:_isbn", async (request, response) => {
 // POST http://localhost:3000/api/books
 router.post("/", async (request, response) => {
     try {
-        // 1**. Create BookModel from 'request.body' / 'Network' tab (in F12 mode) > Filter: 'Fetch/XHR' > 'Payload' tab
+        // 1. Create BookModel from 'request.body' / 'Network' tab (in F12 mode) > Filter: 'Fetch/XHR' > 'Payload' tab
         // const book = new BookModel({isbn: "666", title: "The best book ever ever."});
-        const joiBook = new BookModelJOI(request.body);
+        const book = new BookModel(request.body);
 
-        // 2**. Validate the request with the JOI model
-        const errors = joiBook.validatePost(); // synchronized method for running validations
+        // 2. Validate the data (will be done later using JOI)
+        const errors = book.validateSync(); // synchronized method for running validations
         if (errors)
             return response.status(400).send(errors);
 
-        // 3**. Create a Mongoose Model based on the JOI Model
-        const book = new BookModel(joiBook);
-
-        // 4. Execute 'BookModel.save();' -> Will be granted a new '_id' from the DB
+        // 3. Execute 'BookModel.save();' -> Will be granted a new '_id' from the DB
         await book.save();
 
-        // 5. Send back success response. '201' status means CREATED, and we need to convert the 'book' object to a JSON object
+        // 4. Send back success response. '201' status means CREATED, and we need to convert the 'book' object to a JSON object
         response.status(201).json(book);
     } catch(err) {
         response.status(500).send(err.message);
