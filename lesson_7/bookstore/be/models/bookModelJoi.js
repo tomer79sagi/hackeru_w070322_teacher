@@ -17,21 +17,39 @@ class ProductModelJOI {
         this.quantity = object.quantity;
     }
 
+    // The baseline / common denominator of validation for 2 or more endpoint validations
+    static #baselineValidation = {
+        isbn: JOI.number().required(),
+        title: JOI.string().required().min(2).max(400),
+        description: JOI.string(),
+        price: JOI.number().required().min(1).max(200),
+        currency: JOI.string().required().min(3).max(3),
+        quantity: JOI.number().required()
+    };
+
+    static #postValidation = JOI.object( ProductModelJOI.#baselineValidation ).keys({id: JOI.string().forbidden()});
+    static #putValidation = JOI.object( ProductModelJOI.#baselineValidation );
+    static #deleteValidation = JOI.object({
+        id: JOI.string().forbidden(),
+        isbn: JOI.number().required()
+    });
+
     // 2. Method to validate the JOI object against a JOI schema
     validatePost() {
-        // 2.1. Define the JOI schema
-        const postSchema = JOI.object({
-            isbn: JOI.number(),
-            title: JOI.string().required().min(2).max(400),
-            description: JOI.string(),
-            price: JOI.number().required().min(1).max(200),
-            currency: JOI.string().required().min(3).max(3),
-            quantity: JOI.number()
-        });
-
         // 2.2. Validate this 'ProductModelJOI' object against the JOI schema
-        const result = postSchema.validate(this, {abortEarly: false});
+        const result = ProductModelJOI.#postValidation.validate(this, {abortEarly: false});
+        return result.error ? result.error : null;
+    }
 
+    validatePut() {
+        // 2.2. Validate this 'ProductModelJOI' object against the JOI schema
+        const result = ProductModelJOI.#putValidation.validate(this, {abortEarly: false});
+        return result.error ? result.error : null;
+    }
+
+    validateDelete() {
+        // 2.2. Validate this 'ProductModelJOI' object against the JOI schema
+        const result = ProductModelJOI.#deleteValidation.validate(this, {abortEarly: false});
         return result.error ? result.error : null;
     }
 }

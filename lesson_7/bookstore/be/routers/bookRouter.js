@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const fs = require("fs");
+const { bool } = require("joi");
 const BookModel = require("../models/bookModel");
 const BookModelJOI = require("../models/bookModelJoi");
 
@@ -32,6 +33,13 @@ router.get("/:_isbn", async (request, response) => {
 router.delete("/:_isbn", async (request, response) => {
     try {
         const isbn = request.params._isbn;
+        const joiBook = new BookModelJOI({isbn: isbn});
+
+        // 2**. Validate the request with the JOI model
+        const errors = joiBook.validateDelete(); // synchronized method for running validations
+        if (errors)
+            return response.status(400).send(errors);
+            
         await BookModel.deleteOne({"isbn": isbn});
 
         // When using DELETE, the standard is to send the 204 status without any content
@@ -105,18 +113,21 @@ router.put("/:_isbn", async (request, response) => {
 
     // 1. Create a try/catch block.
     try {
-
-        // 2. Extract 'isbn' value from the URL/path 'request.params'
-        const isbn = request.params._isbn;
-
         // 3. Extract the 'book' properties from the 'request.body'
         const book = request.body;
+        book.isbn = request.params._isbn;
 
         // 4. [Validate Book Object] --> ...
-        //  - [Failed validation] return status 400, including specific error message
+         // const book = new BookModel({isbn: "666", title: "The best book ever ever."});
+        const joiBook = new BookModelJOI(book);
+
+        // 2**. Validate the request with the JOI model
+        const errors = joiBook.validatePut(); // synchronized method for running validations
+        if (errors)
+            return response.status(400).send(errors);
 
         // 5. Execute mongoose 'update' function with 'isbn' and the book 'object'
-        const updatedBook = await BookModel.updateOne({isbn: isbn}, book);
+        const updatedBook = await BookModel.updateOne({isbn: book.isbn}, book);
 
         //  - [No ISBN provided OR ISBN doesn't exist in DB] return status 404
         if (updatedBook.matchedCount === 0)
