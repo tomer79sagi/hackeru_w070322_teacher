@@ -9,10 +9,15 @@
   "author": "Tomer Sagi",
   "license": "ISC",
   "dependencies": {
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dayjs": "^1.11.7",
     "express": "^4.18.2",
     "joi": "^17.7.0",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.8.3",
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.20",
+    "url": "^0.11.0"
   }
 }

@@ -27,6 +27,61 @@ async function loadTable() {
   });
 }
 
+function showRegistrationBox() {
+  Swal.fire({
+    title: 'Register',
+    html:
+      '<input id="username" class="swal2-input" placeholder="username">' +
+      '<input id="password" class="swal2-input" placeholder="password">',
+    focusConfirm: false,
+    preConfirm: async () => {
+      const result = await register();
+
+      
+    }
+  })
+}
+
+async function register() {
+  const user = {
+    username: document.getElementById("username").value,
+    password: document.getElementById("password").value
+  };
+
+  // POST http://localhost:3000/api/books
+  await axios.post(`http://localhost:3000/api/auth/register`, user)
+  .then(res => {
+    debugger;
+      if (res.status === 201) {
+        Swal.fire(`Successfully registered new user '${res.data.username}'.`);
+        loadTable();
+      }
+  })
+  .catch(err => {
+      let msg = "";
+      if (err.response.status === 400) {
+        
+        if (err.response.data.details) {
+
+          const erArray = err.response.data.details;
+          for (field in erArray) {
+            // 1. Use 'selector' - querySelector / getElementById etc. to find the matching UI field
+            // 2. Highlight the field with a red border and display the message below it
+            // alert(field + " " + erArray[field].message);
+            msg += erArray[field].message + "<br/>";
+          }
+        }
+      } else {
+        msg += err.response.status + "\n\r" + err.response.data + "\n\r" + err.message;
+        // alert(err.response.status + "\n\r" + err.response.data + "\n\r" + err.message);
+      }
+
+      Swal.showValidationMessage(
+        `Request failed: <br/>${msg}`
+      )
+  });
+}
+
 function showBookCreateBox() {
   Swal.fire({
     title: 'Create book',

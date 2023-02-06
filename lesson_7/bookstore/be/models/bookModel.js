@@ -11,7 +11,27 @@ const BookSchema = mongoose.Schema({
     quantity: Number
 })
 
-BookSchema.loadClass(Val);
+// class Val {
+//     validatePost() {
+//         const v = {
+//             ...baselineValidation, 
+//             id: JOI.string().forbidden()
+//         };
+
+//         return JOI.object(v).extract(v.keys()).validate(this, { abortEarly: false });
+//     }
+
+//     validateDelete() {
+//         const v = {
+//             id: JOI.string().forbidden(), 
+//             isbn: JOI.number().required()
+//         };
+
+//         return JOI.object(v).extract(v.keys()).validate(this, { abortEarly: false });
+//     }
+// }
+
+// BookSchema.loadClass(Val);
 
 // JOI Validations
 const baselineValidation = {
@@ -23,7 +43,7 @@ const baselineValidation = {
     quantity: JOI.number().required()
 };
 
-// Post Validation, using 'spread', copying of the object to avoid changing the original version
+// 
 BookSchema.statics.validatePost = (obj) => {
     return JOI.object({
         ...baselineValidation, 

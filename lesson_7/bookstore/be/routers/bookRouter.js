@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const { bool } = require("joi");
+const verify_logged_in = require("../middleware/verify_logged_in");
 const BookModel = require("../models/bookModel");
 const BookModelJOI = require("../models/bookModelJoi");
 
@@ -32,14 +33,15 @@ router.get("/:_isbn", async (request, response) => {
 // DELETE http://localhost:3000/api/books/9788532520056
 router.delete("/:_isbn", async (request, response) => {
     try {
-        const isbn = request.params._isbn;
-        const joiBook = new BookModelJOI({isbn: isbn});
+        // Merge 'request.body' with 'request.params'
+        const params = {...request.body, ...request.params};
 
         // 2**. Validate the request with the JOI model
-        const errors = joiBook.validateDelete(); // synchronized method for running validations
+        const errors = BookModel.validateDelete(params); // synchronized method for running validations
         if (errors)
             return response.status(400).send(errors);
             
+        const book = new BookModel(params);
         await BookModel.deleteOne({"isbn": isbn});
 
         // When using DELETE, the standard is to send the 204 status without any content
@@ -50,19 +52,18 @@ router.delete("/:_isbn", async (request, response) => {
 });
 
 // POST http://localhost:3000/api/books
-router.post("/", async (request, response) => {
+router.post("/", verify_logged_in, async (request, response) => {
     try {
         // 1**. Create BookModel from 'request.body' / 'Network' tab (in F12 mode) > Filter: 'Fetch/XHR' > 'Payload' tab
         // const book = new BookModel({isbn: "666", title: "The best book ever ever."});
-        const joiBook = new BookModelJOI(request.body);
-
+        
         // 2**. Validate the request with the JOI model
-        const errors = joiBook.validatePost(); // synchronized method for running validations
+        const errors = BookModel.validatePost(request.body); // synchronized method for running validations
         if (errors)
             return response.status(400).send(errors);
 
         // 3**. Create a Mongoose Model based on the JOI Model
-        const book = new BookModel(joiBook);
+        const book = new BookModel(request.body);
 
         // 4. Execute 'BookModel.save();' -> Will be granted a new '_id' from the DB
         await book.save();
