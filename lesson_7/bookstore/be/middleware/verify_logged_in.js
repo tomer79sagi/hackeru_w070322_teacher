@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+const crypto = require("../helper/crypto_helper");
 
 function verify_logged_in(req, res, next) {
 
@@ -14,32 +14,12 @@ function verify_logged_in(req, res, next) {
     }
 
     // 3. Check if Token is valid (using JWT). If all is well, 'next()'
-    jwt.verify(token, "SuchAPerfectDay", (err, payload) => {
-        
-        // A. If 'err' exists: [1] Token expired, [2] All else
-        if (err && err.message === "jwt expired") {
-            return res.status(403).send("Your session has expired.");
-        }
+    crypto.jwtVerify(token, (err) => {
+        if (err)
+            return res.status(err.status).send(err.message);
 
-        if (err) {
-            return res.status(401).send("You are not authorized to access this resource.");
-        }
-
-        // B. If all is well, 'next()'
         next();
     });
-
-
-    // console.log(`'${req.path}' called [Verify Logged In - Middleware]`);
-    // const token = req.body['token'];
-
-    // Check if token doesn't exist or token is NOT equal "TomerIsTheMan"
-    // if (token && token === "TomerIsTheMan") { // Positive
-    // if (!token || token !== "TomerIsTheMan") { // Negative
-    //     return res.status(401).json("You don't have permission to access this resource");
-    // }
-
-    // next();
 }
 
 module.exports = verify_logged_in;

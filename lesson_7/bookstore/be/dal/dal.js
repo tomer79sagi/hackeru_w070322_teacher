@@ -7,7 +7,7 @@ function connectAsync() {
         const options = { useNewUrlParser: true, useUnifiedTopology: true };
 
         // Connect to MongoDB:
-        mongoose.connect("mongodb://localhost:27017/hackerU_bookDB", options, (err, db) => {
+        mongoose.connect(config.database.mongoDBUrl, options, (err, db) => {
             if(err) {
                 reject(err);
                 return;

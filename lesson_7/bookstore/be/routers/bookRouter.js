@@ -1,10 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const fs = require("fs");
-const { bool } = require("joi");
 const verify_logged_in = require("../middleware/verify_logged_in");
 const BookModel = require("../models/bookModel");
-const BookModelJOI = require("../models/bookModelJoi");
 
 // GET http://localhost:3000/api/books
 router.get("/", async (request, response) => {
@@ -37,9 +35,9 @@ router.delete("/:_isbn", async (request, response) => {
         const params = {...request.body, ...request.params};
 
         // 2**. Validate the request with the JOI model
-        const errors = BookModel.validateDelete(params); // synchronized method for running validations
-        if (errors)
-            return response.status(400).send(errors);
+        const valRes = BookModel.validateDelete(params); // synchronized method for running validations
+        if (valRes.error)
+            return response.status(400).send(valRes.error);
             
         const book = new BookModel(params);
         await BookModel.deleteOne({"isbn": isbn});
@@ -54,21 +52,18 @@ router.delete("/:_isbn", async (request, response) => {
 // POST http://localhost:3000/api/books
 router.post("/", verify_logged_in, async (request, response) => {
     try {
-        // 1**. Create BookModel from 'request.body' / 'Network' tab (in F12 mode) > Filter: 'Fetch/XHR' > 'Payload' tab
-        // const book = new BookModel({isbn: "666", title: "The best book ever ever."});
-        
-        // 2**. Validate the request with the JOI model
-        const errors = BookModel.validatePost(request.body); // synchronized method for running validations
-        if (errors)
-            return response.status(400).send(errors);
+        // 1**. Validate the request with the JOI model
+        const valRes = BookModel.validatePost(request.body); // synchronized method for running validations
+        if (valRes.error)
+            return response.status(400).send(valRes.error);
 
-        // 3**. Create a Mongoose Model based on the JOI Model
+        // 2**. Create a Mongoose Model based on the JOI Model
         const book = new BookModel(request.body);
 
-        // 4. Execute 'BookModel.save();' -> Will be granted a new '_id' from the DB
+        // 3. Execute 'BookModel.save();' -> Will be granted a new '_id' from the DB
         await book.save();
 
-        // 5. Send back success response. '201' status means CREATED, and we need to convert the 'book' object to a JSON object
+        // 4. Send back success response. '201' status means CREATED, and we need to convert the 'book' object to a JSON object
         response.status(201).json(book);
     } catch(err) {
         response.status(500).send(err.message);
@@ -114,20 +109,18 @@ router.put("/:_isbn", async (request, response) => {
 
     // 1. Create a try/catch block.
     try {
-        // 3. Extract the 'book' properties from the 'request.body'
-        const book = request.body;
-        book.isbn = request.params._isbn;
-
-        // 4. [Validate Book Object] --> ...
-         // const book = new BookModel({isbn: "666", title: "The best book ever ever."});
-        const joiBook = new BookModelJOI(book);
+        // 1. Extract the 'book' properties from the 'request.body'
+        const params = {...request.body, ...request.params};
 
         // 2**. Validate the request with the JOI model
-        const errors = joiBook.validatePut(); // synchronized method for running validations
-        if (errors)
-            return response.status(400).send(errors);
+        const valRes = BookModel.validatePut(params); // synchronized method for running validations
+        if (valRes.error)
+            return response.status(400).send(valRes.error);
 
-        // 5. Execute mongoose 'update' function with 'isbn' and the book 'object'
+        // 3. [Validate Book Object] --> ...
+        const joiBook = new BookModel(params);
+
+        // 4. Execute mongoose 'update' function with 'isbn' and the book 'object'
         const updatedBook = await BookModel.updateOne({isbn: book.isbn}, book);
 
         //  - [No ISBN provided OR ISBN doesn't exist in DB] return status 404

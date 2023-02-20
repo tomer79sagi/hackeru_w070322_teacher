@@ -21,28 +21,27 @@ const baselineValidation = {
     quantity: JOI.number().required()
 };
 
-// Post Validation
-BookSchema.statics.validatePost = (obj) => {
-    return JOI.object({
-        ...baselineValidation, 
-        id: JOI.string().forbidden()
-    }).validate(obj, { abortEarly: false });
+class Val {
+    validatePost() {
+        const v = {
+            ...baselineValidation, 
+            id: JOI.string().forbidden()
+        };
+
+        return JOI.object(v).extract(v.keys()).validate(this, { abortEarly: false });
+    }
+
+    validateDelete() {
+        const v = {
+            id: JOI.string().forbidden(), 
+            isbn: JOI.number().required()
+        };
+
+        return JOI.object(v).extract(v.keys()).validate(this, { abortEarly: false });
+    }
 }
 
-// Put Validation
-BookSchema.statics.validatePut = (obj) => {
-    return JOI.object({
-        ...baselineValidation
-    }).validate(obj, { abortEarly: false });
-}
-
-// Delete Validation
-BookSchema.statics.validateDelete = (obj) => {
-    return JOI.object({
-        id: JOI.string().forbidden(), 
-        isbn: JOI.number().required()
-    }).validate(obj, { abortEarly: false });
-}
+BookSchema.loadClass(Val);
 
 const BookModel = mongoose.model("BookModel", BookSchema, "books");
 

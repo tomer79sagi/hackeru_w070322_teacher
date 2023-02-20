@@ -1,0 +1,16 @@
+{
+    "token": {
+        "expiry": "5m",
+        "cookie": {
+            "expiryPeriod": 5,
+            "expiryType": "minutes"
+        }
+    },
+    "salts": {
+        "hash": "TomerIsTheMan",
+        "jwt": "SuchAPerfectDay"
+    },
+    "database": {
+        "mongoDBUrl": "mongodb://localhost:27017/hackerU_bookDB"
+    }
+}
